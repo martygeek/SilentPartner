@@ -1,6 +1,6 @@
-package com.martypants.silentpartner
+package com.martypants.silentpartner.viewmodels
 
-import com.martypants.silentpartner.viewmodels.GifViewModel
+import com.martypants.silentpartner.App
 
 
 /**

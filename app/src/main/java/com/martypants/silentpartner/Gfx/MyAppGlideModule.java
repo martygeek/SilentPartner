@@ -1,4 +1,4 @@
-package com.martypants.silentpartner;
+package com.martypants.silentpartner.Gfx;
 
 import android.content.Context;
 

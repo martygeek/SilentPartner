@@ -13,6 +13,7 @@ public class SpeechListener : RecognitionListener {
 
     interface OnSpeechListener {
         fun onSpeechResults(words: String)
+        fun onSpeechReady()
     }
 
     private var speechRecognizer: SpeechRecognizer?  = null
@@ -33,10 +34,11 @@ public class SpeechListener : RecognitionListener {
 
     override fun onReadyForSpeech(p0: Bundle?) {
         showToastMessage("OnReadyForSpeech")
+        speechCallback?.onSpeechReady()
     }
 
     override fun onRmsChanged(p0: Float) {
-        showToastMessage("onRmsCHanged "+p0)
+//        showToastMessage("onRmsCHanged "+p0)
     }
 
     override fun onBufferReceived(p0: ByteArray?) {
@@ -68,17 +70,31 @@ public class SpeechListener : RecognitionListener {
             SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> showToastMessage("ERROR_NETWORK_TIMEOUT")
             SpeechRecognizer.ERROR_NO_MATCH -> {
                 showToastMessage("ERROR_NO_MATCH")
+                speechRecognizer?.cancel()
                 speechRecognizer?.startListening(speechIntent)
+
+                showToastMessage("starting speech listener after no match")
             }
             SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> showToastMessage("ERROR_RECOGNIZER_BUSY")
             SpeechRecognizer.ERROR_SERVER -> showToastMessage("ERROR_SERVER")
-            SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> showToastMessage("ERROR_SPEECH_TIMEOUT")
+            SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
+                showToastMessage("ERROR_SPEECH_TIMEOUT")
+                speechRecognizer?.cancel()
+                speechRecognizer?.startListening(speechIntent)
+                showToastMessage("starting speech listener after timeout")
+            }
 
         }
     }
 
     override fun onResults(p0: Bundle?) {
         val words: ArrayList<String> = p0?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) as ArrayList<String>
+        val scores: FloatArray? = p0?.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES)
+        if (scores != null) {
+            if (scores[0] > 0.5) {
+                speechCallback?.onSpeechResults(words[0])
+            }
+        }
         speechCallback?.onSpeechResults(words.toString())
     }
 
