@@ -2,13 +2,11 @@ package com.martypants.silentpartner
 
 import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
@@ -29,10 +27,8 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
     lateinit var recognizer: SpeechRecognizer
     lateinit var viewmodel: GifViewModel
 
-    var mVoiceResultTV: TextView? = null
     var imageView: ImageView? = null
     var speechIntent: Intent? = null
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,14 +64,12 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
         }
     }
 
-    fun speak() {
+    private fun speak() {
         recognizer = SpeechRecognizer.createSpeechRecognizer(this)
-
         speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
         speechIntent?.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, javaClass.getPackage()!!.name)
         speechIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
         speechIntent?.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, NUMBER_OF_RESULTS_TO_SHOW)
-        speechIntent?.putExtra(RecognizerIntent.EXTRA_PROMPT, "Silent Partner is Listening")
         val speechListener = SpeechListener()
         speechListener.setRecognizer(recognizer)
         speechListener.setListener(this)
@@ -83,7 +77,6 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
         recognizer.setRecognitionListener(speechListener)
         recognizer.startListening(speechIntent)
     }
-
 
     override fun onSpeechResults(words: String) {
         viewmodel.getGif(words).observe(this, Observer<GIF> {
@@ -109,7 +102,7 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
     ) {
         when (requestCode) {
             999 -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                if ((grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED)) {
                     checkVoiceRecognition()
                 }
                 return
@@ -118,7 +111,6 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
     }
 
     companion object {
-        private val TAG = "SilentP"
         private val NUMBER_OF_RESULTS_TO_SHOW = 1
     }
 

@@ -40,19 +40,16 @@ class GifViewModel (app: App): AndroidViewModel(app) {
     }
 
     private fun loadGifData() {
-        Log.d("SilentP", "request Load "+searchString)
 
         dataManager.getGifData(searchString!!)
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.subscribe({
-                Log.d("SilentP", "Loaded "+it.data[0].images.original.url)
                 gifData.value = it
             },
                 { error ->
-
                     Log.d(
-                        "REPO","Error: " + error.localizedMessage
+                        "GIPHY", "Error: " + error.localizedMessage
                     )
                 })
     }

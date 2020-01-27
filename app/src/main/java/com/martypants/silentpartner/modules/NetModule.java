@@ -60,7 +60,6 @@ public class NetModule {
 
         return new GsonBuilder()
                 .registerTypeAdapter(Date.class, new GsonUtcDateAdapter())
-//                .excludeFieldsWithoutExposeAnnotation()
                 .create();
     }
 
