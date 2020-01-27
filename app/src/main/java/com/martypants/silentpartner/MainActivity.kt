@@ -4,8 +4,6 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -16,12 +14,7 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.load.DataSource
-import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.request.RequestListener
-import com.bumptech.glide.request.target.Target
-import com.martypants.silentpartner.Gfx.GlideApp
+import com.martypants.silentpartner.Gfx.DisplayGif
 import com.martypants.silentpartner.managers.DataManager
 import com.martypants.silentpartner.models.GIF
 import com.martypants.silentpartner.viewmodels.GifViewModel
@@ -34,11 +27,11 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
 
     @Inject
     lateinit var dataManager: DataManager
+    lateinit var recognizer: SpeechRecognizer
+    lateinit var viewmodel: GifViewModel
 
     var mVoiceResultTV: TextView? = null
     var imageView: ImageView? = null
-    lateinit var recognizer: SpeechRecognizer
-    lateinit var viewmodel: GifViewModel
     var speechIntent: Intent? = null
 
 
@@ -80,42 +73,6 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
     }
 
 
-    fun showGifData(data: GIF) {
-        val thumbnailRequest: RequestBuilder<Drawable> =
-            GlideApp.with(this).load(data).decode(
-                Bitmap::class.java
-            )
-
-        GlideApp.with(this)
-            .load(data.data[0].images.original.url)
-            .thumbnail(thumbnailRequest)
-            .listener( object :
-                    RequestListener<Drawable?> {
-                    override fun onLoadFailed(
-                        e: GlideException?,
-                        model: Any,
-                        target: Target<Drawable?>,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        return false
-                    }
-
-                    override fun onResourceReady(
-                        resource: Drawable?,
-                        model: Any,
-                        target: Target<Drawable?>,
-                        dataSource: DataSource,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        return false
-                    }
-                })
-            .into(imageView!!)
-
-        recognizer.startListening(speechIntent)
-        Log.d("MJR", "starting speech listener after display")
-
-    }
 
     fun speak() {
         recognizer = SpeechRecognizer.createSpeechRecognizer(this)
@@ -140,7 +97,11 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
         viewmodel.getGif(words).observe(this, Observer<GIF> {
 
             mVoiceResultTV?.text = "I heard you say... \n\n "+ words
-            showGifData(it)
+            val displayGif = DisplayGif(this, imageView!!)
+            displayGif.showGifData(it)
+            recognizer.startListening(speechIntent)
+            Log.d("MJR", "starting speech listener after display")
+
         })
     }
 
