@@ -1,6 +1,5 @@
 package com.martypants.silentpartner.viewmodels
 
-import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -36,14 +35,18 @@ class GifViewModel (app: App): AndroidViewModel(app) {
 
     fun getGif(search: String): LiveData<GIF> {
         searchString = search
+        loadGifData()
         return gifData
     }
 
     private fun loadGifData() {
+        Log.d("SilentP", "request Load "+searchString)
+
         dataManager.getGifData(searchString!!)
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.subscribe({
+                Log.d("SilentP", "Loaded "+it.data[0].images.original.url)
                 gifData.value = it
             },
                 { error ->

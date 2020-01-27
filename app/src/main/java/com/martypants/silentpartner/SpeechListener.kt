@@ -14,6 +14,7 @@ public class SpeechListener : RecognitionListener {
     interface OnSpeechListener {
         fun onSpeechResults(words: String)
         fun onSpeechReady()
+        fun onSpeechRestart()
     }
 
     private var speechRecognizer: SpeechRecognizer?  = null
@@ -79,9 +80,7 @@ public class SpeechListener : RecognitionListener {
             SpeechRecognizer.ERROR_SERVER -> showToastMessage("ERROR_SERVER")
             SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
                 showToastMessage("ERROR_SPEECH_TIMEOUT")
-                speechRecognizer?.cancel()
-                speechRecognizer?.startListening(speechIntent)
-                showToastMessage("starting speech listener after timeout")
+                speechCallback?.onSpeechRestart()
             }
 
         }
@@ -89,7 +88,7 @@ public class SpeechListener : RecognitionListener {
 
     override fun onResults(p0: Bundle?) {
         val words: ArrayList<String> = p0?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) as ArrayList<String>
-        val scores: FloatArray? = p0?.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES)
+        val scores: FloatArray? = p0.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES)
         if (scores != null) {
             if (scores[0] > 0.5) {
                 speechCallback?.onSpeechResults(words[0])

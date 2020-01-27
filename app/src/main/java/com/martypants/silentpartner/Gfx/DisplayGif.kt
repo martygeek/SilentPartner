@@ -23,6 +23,7 @@ public class DisplayGif(val context: Context, val imageView: ImageView) {
                 Bitmap::class.java
             )
 
+
         GlideApp.with(context)
             .load(data.data[0].images.original.url)
             .thumbnail(thumbnailRequest)
@@ -48,8 +49,6 @@ public class DisplayGif(val context: Context, val imageView: ImageView) {
                 }
             })
             .into(imageView)
-
-
     }
 
 }

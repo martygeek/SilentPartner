@@ -7,7 +7,6 @@ import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -38,7 +37,6 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        mVoiceResultTV = findViewById(R.id.voiceResultText) as TextView
 
         imageView = findViewById(R.id.gifView) as ImageView?
         viewmodel = ViewModelProviders.of(this,
@@ -56,9 +54,7 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
             // make sure this device has speech recognition
             checkVoiceRecognition()
         }
-
     }
-
 
     fun checkVoiceRecognition() {
         // Check if voice recognition is present
@@ -71,8 +67,6 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
             speak()
         }
     }
-
-
 
     fun speak() {
         recognizer = SpeechRecognizer.createSpeechRecognizer(this)
@@ -88,25 +82,25 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
         speechListener.setIntent(speechIntent!!)
         recognizer.setRecognitionListener(speechListener)
         recognizer.startListening(speechIntent)
-        Log.d("MJR", "starting speech listener")
-
     }
 
 
     override fun onSpeechResults(words: String) {
         viewmodel.getGif(words).observe(this, Observer<GIF> {
 
-            mVoiceResultTV?.text = "I heard you say... \n\n "+ words
             val displayGif = DisplayGif(this, imageView!!)
             displayGif.showGifData(it)
             recognizer.startListening(speechIntent)
-            Log.d("MJR", "starting speech listener after display")
-
         })
     }
 
     override fun onSpeechReady() {
-        mVoiceResultTV?.text = "Listening..."
+        // splash screen goes away
+    }
+
+    override fun onSpeechRestart() {
+        recognizer.destroy()
+        speak()
     }
 
     override fun onRequestPermissionsResult(
