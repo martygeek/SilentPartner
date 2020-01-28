@@ -1,13 +1,19 @@
 package com.martypants.silentpartner
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.media.AudioManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.view.View
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -28,14 +34,21 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
     lateinit var viewmodel: GifViewModel
 
     var imageView: ImageView? = null
+    var statusView: TextView? = null
+    var splashView: ConstraintLayout? = null
     var speechIntent: Intent? = null
+    var hasSeenSplash = false
+    var hasSeenHint = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        AudioUtils.muteAudio(true, this)
         imageView = findViewById(R.id.gifView) as ImageView?
-        viewmodel = ViewModelProviders.of(this,
+        statusView = findViewById(R.id.listening) as TextView?
+        splashView = findViewById(R.id.splash) as ConstraintLayout?
+        viewmodel = ViewModelProviders.of(
+            this,
             MyViewModelFactory(
                 application as App
             )
@@ -60,27 +73,43 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
         if (activities.size == 0) {
             Toast.makeText(this, "Voice recognizer not present", Toast.LENGTH_SHORT).show()
         } else {
+            createSpeechObjects()
             speak()
         }
     }
 
-    private fun speak() {
+    private fun createSpeechObjects() {
         recognizer = SpeechRecognizer.createSpeechRecognizer(this)
         speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        speechIntent?.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, javaClass.getPackage()!!.name)
-        speechIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        speechIntent?.putExtra(
+            RecognizerIntent.EXTRA_CALLING_PACKAGE,
+            javaClass.getPackage()!!.name
+        )
+        speechIntent?.putExtra(
+            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+        )
         speechIntent?.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, NUMBER_OF_RESULTS_TO_SHOW)
         val speechListener = SpeechListener()
         speechListener.setRecognizer(recognizer)
         speechListener.setListener(this)
         speechListener.setIntent(speechIntent!!)
         recognizer.setRecognitionListener(speechListener)
+    }
+
+    private fun speak() {
         recognizer.startListening(speechIntent)
     }
 
     override fun onSpeechResults(words: String) {
         viewmodel.getGif(words).observe(this, Observer<GIF> {
 
+            if (!hasSeenHint) {
+                val disappear = AnimationUtils.loadAnimation(this, R.anim.disappear)
+                statusView?.visibility = View.GONE
+                statusView?.startAnimation(disappear)
+                hasSeenHint = true
+            }
             val displayGif = DisplayGif(this, imageView!!)
             displayGif.showGifData(it)
             recognizer.startListening(speechIntent)
@@ -89,10 +118,20 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
 
     override fun onSpeechReady() {
         // splash screen goes away
+        if (!hasSeenSplash) {
+            val goAway = AnimationUtils.loadAnimation(this, R.anim.shrink_to_center)
+            val appear = AnimationUtils.loadAnimation(this, R.anim.appear)
+            splashView?.visibility = View.GONE
+            splashView?.startAnimation(goAway)
+            statusView?.visibility = View.VISIBLE
+            statusView?.startAnimation(appear)
+            hasSeenSplash = true
+        }
     }
 
     override fun onSpeechRestart() {
         recognizer.destroy()
+        createSpeechObjects()
         speak()
     }
 
@@ -110,8 +149,24 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        AudioUtils.muteAudio(false, this)
+    }
+
     companion object {
         private val NUMBER_OF_RESULTS_TO_SHOW = 1
     }
 
+    object AudioUtils {
+
+        @JvmStatic
+        fun muteAudio(shouldMute: Boolean, context: Context) {
+            val audioManager: AudioManager =
+                context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val muteValue = if (shouldMute) AudioManager.ADJUST_MUTE else AudioManager.ADJUST_UNMUTE
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, muteValue, 0)
+        }
+
+    }
 }

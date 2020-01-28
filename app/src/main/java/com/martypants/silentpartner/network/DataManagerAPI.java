@@ -19,6 +19,5 @@ public interface DataManagerAPI {
     @GET("/v1/gifs/search")
     Observable<GIF> getGifData(@Query("q") String search, @Query("api_key") String apiKey);
 
-
 }
 

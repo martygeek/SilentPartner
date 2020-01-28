@@ -15,6 +15,4 @@ class DataManager(private val mApi: DataManagerAPI) {
         return mApi.getGifData(search, apiKey);
     }
 
-
-
 }
