@@ -35,7 +35,6 @@ public class SpeechListener : RecognitionListener {
 
     override fun onReadyForSpeech(p0: Bundle?) {
         showToastMessage("OnReadyForSpeech")
-        speechCallback?.onSpeechReady()
     }
 
     override fun onRmsChanged(p0: Float) {
@@ -56,6 +55,8 @@ public class SpeechListener : RecognitionListener {
 
     override fun onBeginningOfSpeech() {
         showToastMessage("onBEginningofSpeech")
+        speechCallback?.onSpeechReady()
+
     }
 
     override fun onEndOfSpeech() {

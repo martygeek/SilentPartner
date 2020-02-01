@@ -9,15 +9,15 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.view.View
+import android.view.animation.Animation
 import android.view.animation.AnimationUtils
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
+import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.martypants.silentpartner.Gfx.DisplayGif
+import com.martypants.silentpartner.databinding.ActivityMainBinding
 import com.martypants.silentpartner.managers.DataManager
 import com.martypants.silentpartner.models.GIF
 import com.martypants.silentpartner.viewmodels.GifViewModel
@@ -32,37 +32,41 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
     lateinit var dataManager: DataManager
     lateinit var recognizer: SpeechRecognizer
     lateinit var viewmodel: GifViewModel
+    lateinit var binding: ActivityMainBinding
 
-    var imageView: ImageView? = null
-    var statusView: TextView? = null
-    var splashView: ConstraintLayout? = null
     var speechIntent: Intent? = null
     var hasSeenSplash = false
     var hasSeenHint = false
+    lateinit var disappear: Animation
+    lateinit var appear: Animation
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        AudioUtils.muteAudio(true, this)
-        imageView = findViewById(R.id.gifView) as ImageView?
-        statusView = findViewById(R.id.listening) as TextView?
-        splashView = findViewById(R.id.splash) as ConstraintLayout?
-        viewmodel = ViewModelProviders.of(
-            this,
-            MyViewModelFactory(
-                application as App
-            )
-        )
-            .get(GifViewModel::class.java)
         (application as App).userComponent?.inject(this)
 
-        // first, check that we have permission to record audio
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        viewmodel = ViewModelProviders.of(this, MyViewModelFactory(application as App))
+            .get(GifViewModel::class.java)
+        binding.viewmodel = viewmodel
+        loadAnimations()
+
+        if (viewmodel.hasData()) {
+            DisplayGif(this, binding.gifview!!).showGifData(viewmodel.gifData.value!!)
+        }
+
+        // check that we have permission to record audio
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 999)
         } else {
             // make sure this device has speech recognition
             checkVoiceRecognition()
         }
+    }
+
+    private fun loadAnimations() {
+        disappear = AnimationUtils.loadAnimation(this, R.anim.disappear)
+        appear = AnimationUtils.loadAnimation(this, R.anim.appear)
     }
 
     fun checkVoiceRecognition() {
@@ -73,6 +77,7 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
         if (activities.size == 0) {
             Toast.makeText(this, "Voice recognizer not present", Toast.LENGTH_SHORT).show()
         } else {
+            AudioUtils.muteAudio(true, this)
             createSpeechObjects()
             speak()
         }
@@ -104,33 +109,28 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
     override fun onSpeechResults(words: String) {
         viewmodel.getGif(words).observe(this, Observer<GIF> {
 
-            if (!hasSeenHint) {
-                val disappear = AnimationUtils.loadAnimation(this, R.anim.disappear)
-                statusView?.visibility = View.GONE
-                statusView?.startAnimation(disappear)
-                hasSeenHint = true
+            if (viewmodel.shouldShowListening.get().equals(View.VISIBLE)) {
+                binding.status.visibility = View.GONE
+                binding.status.startAnimation(disappear)
+                viewmodel.showListening(false)
             }
-            val displayGif = DisplayGif(this, imageView!!)
-            displayGif.showGifData(it)
+            DisplayGif(this, binding.gifview!!).showGifData(it)
+            viewmodel.gifShown()
             recognizer.startListening(speechIntent)
         })
     }
 
     override fun onSpeechReady() {
         // splash screen goes away
-        if (!hasSeenSplash) {
-            val goAway = AnimationUtils.loadAnimation(this, R.anim.shrink_to_center)
-            val appear = AnimationUtils.loadAnimation(this, R.anim.appear)
-            splashView?.visibility = View.GONE
-            splashView?.startAnimation(goAway)
-            statusView?.visibility = View.VISIBLE
-            statusView?.startAnimation(appear)
-            hasSeenSplash = true
+        if (viewmodel.shouldShowSplash.get().equals(View.VISIBLE)) {
+            binding.splash?.visibility = View.GONE
+            binding.splash?.startAnimation(disappear)
+            viewmodel.splashShown()
+            viewmodel.showListening(true)
         }
     }
 
     override fun onSpeechRestart() {
-        recognizer.destroy()
         createSpeechObjects()
         speak()
     }
