@@ -135,8 +135,11 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
     }
 
     override fun onSpeechRestart() {
-        Log.d(TAG, "Recreating speech objects")
-//        createSpeechObjects()
+        Log.d(TAG, " Recreating speech objects. Status =" + recognizer.toString())
+        if (recognizer != null) {
+            recognizer.destroy()
+        }
+        createSpeechObjects()
         speak()
     }
 

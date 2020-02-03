@@ -14,7 +14,7 @@ import rx.Observable;
 
 public interface DataManagerAPI {
 
-    public static final String apiKey = "ykw9axdZn8EBob4bNyIvRJSkAkFGMWG0";
+    public static final String apiKey = "ykw9axdZn8EBob4bNyIvRJSkAkFGMWG0";  //beta, rate-limited
 
     @GET("/v1/gifs/search")
     Observable<GIF> getGifData(@Query("q") String search, @Query("api_key") String apiKey, @Query("rating") String rating);

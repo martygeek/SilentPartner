@@ -28,7 +28,8 @@ public class DisplayGif(val context: Context, val imageView: ImageView) {
             Log.d(TAG, it.images.original.url)
         }
 
-        var gifUrl = data.data[0].images.original.url
+        val dataItem = data.data.random()
+        var gifUrl = dataItem.images.original.url
         GlideApp.with(context)
             .load(gifUrl)
             .thumbnail(thumbnailRequest)
