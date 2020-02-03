@@ -8,6 +8,7 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
@@ -27,6 +28,8 @@ import javax.inject.Inject
 
 
 class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
+
+    val TAG = "SilentP"
 
     @Inject
     lateinit var dataManager: DataManager
@@ -103,6 +106,7 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
     }
 
     private fun speak() {
+        Log.d(TAG, "Listening")
         recognizer.startListening(speechIntent)
     }
 
@@ -131,7 +135,8 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
     }
 
     override fun onSpeechRestart() {
-        createSpeechObjects()
+        Log.d(TAG, "Recreating speech objects")
+//        createSpeechObjects()
         speak()
     }
 
@@ -147,6 +152,21 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
                 return
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (recognizer != null) {
+            recognizer.destroy()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
     }
 
     override fun onStop() {

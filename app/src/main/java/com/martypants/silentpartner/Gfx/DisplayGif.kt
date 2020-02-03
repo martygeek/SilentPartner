@@ -3,6 +3,7 @@ package com.martypants.silentpartner.Gfx
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.util.Log
 import android.widget.ImageView
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.DataSource
@@ -15,7 +16,7 @@ import com.martypants.silentpartner.models.GIF
  * Created by Martin Rehder on 2020-01-26.
  */
 public class DisplayGif(val context: Context, val imageView: ImageView) {
-
+    val TAG = "GIF"
 
     fun showGifData(data: GIF) {
         val thumbnailRequest: RequestBuilder<Drawable> =
@@ -23,21 +24,31 @@ public class DisplayGif(val context: Context, val imageView: ImageView) {
                 Bitmap::class.java
             )
 
+        data.data.forEach {
+            Log.d(TAG, it.images.original.url)
+        }
 
+        var gifUrl = data.data[0].images.original.url
         GlideApp.with(context)
-            .load(data.data[0].images.original.url)
+            .load(gifUrl)
             .thumbnail(thumbnailRequest)
             .listener(object : RequestListener<Drawable?> {
                 override fun onLoadFailed(
-                    e: GlideException?, model: Any, target: Target<Drawable?>,
+                    e: GlideException?,
+                    model: Any,
+                    target: Target<Drawable?>,
                     isFirstResource: Boolean
                 ): Boolean {
+                    Log.d(TAG, "Failed on " + gifUrl)
                     return false
                 }
 
                 override fun onResourceReady(
-                    resource: Drawable?, model: Any, target: Target<Drawable?>,
-                    dataSource: DataSource, isFirstResource: Boolean
+                    resource: Drawable?,
+                    model: Any,
+                    target: Target<Drawable?>,
+                    dataSource: DataSource,
+                    isFirstResource: Boolean
                 ): Boolean {
                     return false
                 }

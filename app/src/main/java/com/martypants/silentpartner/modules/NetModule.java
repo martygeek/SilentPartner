@@ -86,7 +86,7 @@ public class NetModule {
 
                     return chain.proceed(request);
                 })
-                .addInterceptor(interceptor)
+//                .addInterceptor(interceptor)
                 .build();
     }
 

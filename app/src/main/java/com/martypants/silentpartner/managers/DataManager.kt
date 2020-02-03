@@ -12,7 +12,7 @@ import rx.Observable
 class DataManager(private val mApi: DataManagerAPI) {
 
     fun getGifData(search: String) : Observable<GIF>? {
-        return mApi.getGifData(search, apiKey);
+        return mApi.getGifData(search, apiKey, "G");
     }
 
 }
