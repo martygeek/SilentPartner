@@ -54,7 +54,7 @@ public class SpeechListener : RecognitionListener {
     }
 
     override fun onBeginningOfSpeech() {
-        showToastMessage("onBEginningofSpeech")
+        showToastMessage("onBeginningofSpeech")
         speechCallback?.onSpeechReady()
 
     }
@@ -95,7 +95,6 @@ public class SpeechListener : RecognitionListener {
                 speechCallback?.onSpeechResults(words[0])
             }
         }
-        speechCallback?.onSpeechResults(words.toString())
     }
 
     fun showToastMessage(message:String) {

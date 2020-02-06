@@ -12,8 +12,8 @@ android {
         applicationId "com.martypants.silentPartner"
         minSdkVersion 24
         targetSdkVersion 29
-        versionCode 4
-        versionName "1.002"
+        versionCode 5
+        versionName "1.003"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -38,13 +38,10 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "androidx.core:core-ktx:1.1.0"
-
-//    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0-rc03"
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
 
+// Giphy
     implementation 'com.giphy.sdk:ui:1.1.2'
-
-
 
     // REST
     implementation 'com.squareup.retrofit2:retrofit:2.7.1'
@@ -70,10 +67,6 @@ dependencies {
     implementation 'com.google.dagger:dagger:2.25.4'
     kapt 'com.google.dagger:dagger-compiler:2.25.4'
     implementation 'com.google.dagger:dagger-android:2.25.4'
-    // If you're using classes in dagger.android
-//    implementation 'com.google.dagger:dagger-android-support:2.25.4'
-    // if you use the support libraries
-//    kapt 'com.google.dagger:dagger-android-processor:2.25.4'
 
     testImplementation 'junit:junit:4.13'
 }

@@ -1,11 +1,13 @@
 package com.martypants.silentpartner
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.media.AudioManager
 import android.os.Bundle
+import android.os.Handler
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
@@ -26,7 +28,7 @@ import com.martypants.silentpartner.viewmodels.MyViewModelFactory
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity
 import javax.inject.Inject
 
-
+@SuppressLint("LogNotTimber")
 class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
 
     val TAG = "SilentP"
@@ -65,6 +67,13 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
             // make sure this device has speech recognition
             checkVoiceRecognition()
         }
+
+        // Create the observer which updates the UI.
+        val gifObserver = Observer<GIF> { newGif ->
+            updateUI(newGif)
+        }
+        viewmodel.gifData.observe(this, gifObserver)
+
     }
 
     private fun loadAnimations() {
@@ -105,23 +114,25 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
         recognizer.setRecognitionListener(speechListener)
     }
 
+    fun updateUI(newGif: GIF) {
+        DisplayGif(this, binding.gifview!!).showGifData(newGif)
+        if (viewmodel.shouldShowListening.get().equals(View.VISIBLE)) {
+            binding.status.visibility = View.GONE
+            binding.status.startAnimation(disappear)
+            viewmodel.showListening(false)
+            viewmodel.gifShown()
+        }
+        if (recognizer != null) {
+            resumeSpeaking(2000)
+        }
+    }
+
     private fun speak() {
-        Log.d(TAG, "Listening")
         recognizer.startListening(speechIntent)
     }
 
     override fun onSpeechResults(words: String) {
-        viewmodel.getGif(words).observe(this, Observer<GIF> {
-
-            if (viewmodel.shouldShowListening.get().equals(View.VISIBLE)) {
-                binding.status.visibility = View.GONE
-                binding.status.startAnimation(disappear)
-                viewmodel.showListening(false)
-            }
-            DisplayGif(this, binding.gifview!!).showGifData(it)
-            viewmodel.gifShown()
-            recognizer.startListening(speechIntent)
-        })
+        viewmodel.getGif(words)
     }
 
     override fun onSpeechReady() {
@@ -157,8 +168,10 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun resumeSpeaking(awhile: Long) {
+        Handler().postDelayed({
+            recognizer.startListening(speechIntent)
+        }, awhile)
     }
 
     override fun onDestroy() {
@@ -166,10 +179,6 @@ class MainActivity : RxAppCompatActivity(), SpeechListener.OnSpeechListener {
         if (recognizer != null) {
             recognizer.destroy()
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
     }
 
     override fun onStop() {

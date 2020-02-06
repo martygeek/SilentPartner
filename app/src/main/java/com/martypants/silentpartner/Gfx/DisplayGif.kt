@@ -24,12 +24,9 @@ public class DisplayGif(val context: Context, val imageView: ImageView) {
                 Bitmap::class.java
             )
 
-        data.data.forEach {
-            Log.d(TAG, it.images.original.url)
-        }
-
         val dataItem = data.data.random()
         var gifUrl = dataItem.images.original.url
+        Log.d(TAG, "Loading " + gifUrl)
         GlideApp.with(context)
             .load(gifUrl)
             .thumbnail(thumbnailRequest)

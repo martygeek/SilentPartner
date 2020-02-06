@@ -1,10 +1,10 @@
 package com.martypants.silentpartner.viewmodels
 
+import android.annotation.SuppressLint
 import android.util.Log
 import android.view.View
 import androidx.databinding.ObservableInt
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.martypants.silentpartner.App
 import com.martypants.silentpartner.managers.DataManager
@@ -52,26 +52,28 @@ class GifViewModel (app: App): AndroidViewModel(app) {
         shouldShowAttribution.set(View.VISIBLE)
     }
 
-    fun getGif(search: String): LiveData<GIF> {
+    fun getGif(search: String) {
         searchString = search
         loadGifData()
-        return gifData
     }
 
+    @SuppressLint("LogNotTimber")
     private fun loadGifData() {
+        searchString?.let {
+            dataManager.getGifData(searchString!!)
+                ?.subscribeOn(Schedulers.io())
+                ?.observeOn(AndroidSchedulers.mainThread())
+                ?.subscribe({
+                    gifData.value = it
+                    hasLoadadGif = true
+                },
+                    { error ->
+                        Log.d(
+                            "GIPHY", "Error: " + error.localizedMessage
+                        )
+                    })
+        }
 
-        dataManager.getGifData(searchString!!)
-            ?.subscribeOn(Schedulers.io())
-            ?.observeOn(AndroidSchedulers.mainThread())
-            ?.subscribe({
-                gifData.value = it
-                hasLoadadGif = true
-            },
-                { error ->
-                    Log.d(
-                        "GIPHY", "Error: " + error.localizedMessage
-                    )
-                })
     }
 
 
